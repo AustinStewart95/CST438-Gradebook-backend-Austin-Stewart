@@ -1,6 +1,7 @@
 package com.cst438.controllers;
 
 import java.util.ArrayList;
+import java.sql.Date;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
@@ -168,6 +170,66 @@ public class GradeBookController {
 		}
 		
 		return assignment;
+	}
+	
+	@PostMapping("/assignment")
+	@Transactional
+	public void createAssignment(@RequestBody AssignmentListDTO.AssignmentDTO adto) {
+	   System.out.println("Assignment - create new assignment for course " + adto.courseId);
+
+	   // check that this request is from the course instructor 
+	   String email = "dwisneski@csumb.edu";  // user name (should be instructor's email) 
+	   
+	   Course course  = courseRepository.findById(adto.courseId).orElse(null);
+	   if (!course.getInstructor().equals(email)) {
+	      throw new ResponseStatusException( HttpStatus.UNAUTHORIZED, "Not Authorized. " );
+	   }
+	   
+	   if(course!=null){
+	      Assignment assignment = new Assignment();
+	      assignment.setName(adto.assignmentName);
+	      assignment.setDueDate(Date.valueOf(adto.dueDate));
+	      assignment.setCourse(course);
+	      assignmentRepository.save(assignment);
+	   }
+
+	}
+	
+	@PutMapping("/assignment/{assignment_id}")
+	@Transactional
+	public void updateAssignmentName(@RequestBody AssignmentListDTO.AssignmentDTO adto, @PathVariable int assignment_id) {
+	      System.out.println("Assignment - update assignment for Course " + adto.courseId + " Assignment " + assignment_id);
+
+	      // check that this request is from the course instructor 
+	      String email = "dwisneski@csumb.edu";  // user name (should be instructor's email) 
+	      
+	      Course c = courseRepository.findById(adto.courseId).orElse(null);
+	      if (!c.getInstructor().equals(email)) {
+	         throw new ResponseStatusException( HttpStatus.UNAUTHORIZED, "Not Authorized. " );
+	      }
+	      
+	      Assignment assignment = checkAssignment(assignment_id, email);  // check that user name matches instructor email of the course.
+	      assignment.setName(adto.assignmentName);
+	      assignmentRepository.save(assignment);
+	}
+	
+	@DeleteMapping("/course/{course_id}/assignment/{assignment_id}")
+	@Transactional
+	public void deleteAssignment(@PathVariable int course_id, @PathVariable int assignment_id) {
+	     System.out.println("Assignment - delete assignment for course " + course_id);
+
+	      // check that this request is from the course instructor 
+	      String email = "dwisneski@csumb.edu";  // user name (should be instructor's email) 
+	      
+	      Course course  = courseRepository.findById(course_id).orElse(null);
+	      if (!course.getInstructor().equals(email)) {
+	         throw new ResponseStatusException( HttpStatus.UNAUTHORIZED, "Not Authorized. " );
+	      }
+	      
+	      if(course!=null) {
+	         Assignment assignment = checkAssignment(assignment_id, email);
+	         assignmentRepository.delete(assignment);
+	      }
 	}
 
 }
