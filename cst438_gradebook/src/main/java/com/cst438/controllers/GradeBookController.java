@@ -226,8 +226,9 @@ public class GradeBookController {
 	         throw new ResponseStatusException( HttpStatus.UNAUTHORIZED, "Not Authorized. " );
 	      }
 	      
-	      if(course!=null) {
-	         Assignment assignment = checkAssignment(assignment_id, email);
+	      Assignment assignment = checkAssignment(assignment_id, email);
+	      
+	      if(course!=null && assignment.getNeedsGrading() != 0) {
 	         assignmentRepository.delete(assignment);
 	      }
 	}
