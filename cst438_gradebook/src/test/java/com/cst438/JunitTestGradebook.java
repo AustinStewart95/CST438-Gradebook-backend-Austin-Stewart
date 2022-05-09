@@ -288,6 +288,7 @@ public class JunitTestGradebook {
 	   given(assignmentRepository.findById(1)).willReturn(Optional.of(assignment));
 	   given(assignmentGradeRepository.findByAssignmentIdAndStudentEmail(1, TEST_STUDENT_EMAIL)).willReturn(null);
 	   given(assignmentGradeRepository.save(any())).willReturn(ag);
+	   given(courseRepository.findById(TEST_COURSE_ID)).willReturn(Optional.of(course));
 
 	   // end of mock data
 	   
@@ -318,7 +319,7 @@ public class JunitTestGradebook {
       // do http GET for Gradebook 
       response = mvc.perform(
             MockMvcRequestBuilders
-               .get("/gradebook?assignment_id" + result.assignmentId)
+               .get("/gradebook/?assignment_id" + result.assignmentId)
                .accept(MediaType.APPLICATION_JSON))
             .andReturn().getResponse();
       
@@ -370,6 +371,7 @@ public class JunitTestGradebook {
       given(assignmentRepository.findById(1)).willReturn(Optional.of(assignment));
       given(assignmentGradeRepository.findByAssignmentIdAndStudentEmail(1, TEST_STUDENT_EMAIL)).willReturn(null);
       given(assignmentGradeRepository.save(any())).willReturn(ag);
+      given(courseRepository.findById(TEST_COURSE_ID)).willReturn(Optional.of(course));
 
       // end of mock data
 
@@ -438,6 +440,7 @@ public class JunitTestGradebook {
 
       // given -- stubs for database repositories that return test data
       given(assignmentRepository.findById(1)).willReturn(Optional.of(assignment));
+      given(courseRepository.findById(TEST_COURSE_ID)).willReturn(Optional.of(course));
 
       // end of mock data
       
