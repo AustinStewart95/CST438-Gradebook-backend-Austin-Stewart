@@ -174,7 +174,7 @@ public class GradeBookController {
 	
 	@PostMapping("/course/{course_id}/assignment")
 	@Transactional
-	public AssignmentListDTO.AssignmentDTO createAssignment(@RequestBody AssignmentListDTO.AssignmentDTO adto, @PathVariable int course_id) {
+	public AssignmentListDTO.AssignmentDTO addAssignment(@RequestBody AssignmentListDTO.AssignmentDTO adto, @PathVariable Integer course_id) {
 	   System.out.println("Assignment - create new assignment for course " + course_id);
 
 	   // check that this request is from the course instructor 
@@ -201,7 +201,7 @@ public class GradeBookController {
 	
 	@PutMapping("/course/{course_id}/assignment/{assignment_id}")
 	@Transactional
-	public void updateAssignmentName(@RequestBody AssignmentListDTO.AssignmentDTO adto, @PathVariable int course_id, @PathVariable int assignment_id) {
+	public void updateAssignmentName(@RequestBody AssignmentListDTO.AssignmentDTO adto, @PathVariable Integer course_id, @PathVariable Integer assignment_id) {
 	      System.out.println("Assignment - update assignment for Course " + course_id + " Assignment " + assignment_id);
 
 	      // check that this request is from the course instructor 
@@ -219,7 +219,7 @@ public class GradeBookController {
 	
 	@DeleteMapping("/course/{course_id}/assignment/{assignment_id}")
 	@Transactional
-	public void deleteAssignment(@PathVariable int course_id, @PathVariable int assignment_id) {
+	public void deleteAssignment(@PathVariable Integer course_id, @PathVariable Integer assignment_id) {
 	     System.out.println("Assignment - delete assignment for course " + course_id);
 
 	      // check that this request is from the course instructor 
