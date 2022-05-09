@@ -172,38 +172,42 @@ public class GradeBookController {
 		return assignment;
 	}
 	
-	@PostMapping("/assignment")
+	@PostMapping("/course/{course_id}/assignment")
 	@Transactional
-	public void createAssignment(@RequestBody AssignmentListDTO.AssignmentDTO adto) {
-	   System.out.println("Assignment - create new assignment for course " + adto.courseId);
+	public AssignmentListDTO.AssignmentDTO createAssignment(@RequestBody AssignmentListDTO.AssignmentDTO adto, @PathVariable int course_id) {
+	   System.out.println("Assignment - create new assignment for course " + course_id);
 
 	   // check that this request is from the course instructor 
 	   String email = "dwisneski@csumb.edu";  // user name (should be instructor's email) 
 	   
-	   Course course  = courseRepository.findById(adto.courseId).orElse(null);
-	   if (!course.getInstructor().equals(email)) {
-	      throw new ResponseStatusException( HttpStatus.UNAUTHORIZED, "Not Authorized. " );
-	   }
+	   Course course  = courseRepository.findById(course_id).orElse(null);
 	   
-	   if(course!=null){
+	   if(course!=null && email=="dwisneski@csumb.edu"){
 	      Assignment assignment = new Assignment();
 	      assignment.setName(adto.assignmentName);
 	      assignment.setDueDate(Date.valueOf(adto.dueDate));
 	      assignment.setCourse(course);
-	      assignmentRepository.save(assignment);
+	      assignment.setNeedsGrading(1);
+	      Assignment savedAssignment = assignmentRepository.save(assignment);
+	      
+	      adto.assignmentId = savedAssignment.getId();
+	      return adto;
+	   }
+	   else {
+	      throw new ResponseStatusException( HttpStatus.BAD_REQUEST, "Course not found. "+adto.courseId );
 	   }
 
 	}
 	
-	@PutMapping("/assignment/{assignment_id}")
+	@PutMapping("/course/{course_id}/assignment/{assignment_id}")
 	@Transactional
-	public void updateAssignmentName(@RequestBody AssignmentListDTO.AssignmentDTO adto, @PathVariable int assignment_id) {
-	      System.out.println("Assignment - update assignment for Course " + adto.courseId + " Assignment " + assignment_id);
+	public void updateAssignmentName(@RequestBody AssignmentListDTO.AssignmentDTO adto, @PathVariable int course_id, @PathVariable int assignment_id) {
+	      System.out.println("Assignment - update assignment for Course " + course_id + " Assignment " + assignment_id);
 
 	      // check that this request is from the course instructor 
 	      String email = "dwisneski@csumb.edu";  // user name (should be instructor's email) 
 	      
-	      Course c = courseRepository.findById(adto.courseId).orElse(null);
+	      Course c = courseRepository.findById(course_id).orElse(null);
 	      if (!c.getInstructor().equals(email)) {
 	         throw new ResponseStatusException( HttpStatus.UNAUTHORIZED, "Not Authorized. " );
 	      }
@@ -228,7 +232,7 @@ public class GradeBookController {
 	      
 	      Assignment assignment = checkAssignment(assignment_id, email);
 	      
-	      if(course!=null && assignment.getNeedsGrading() != 0) {
+	      if(course!=null && assignment.getNeedsGrading() == 1) {
 	         assignmentRepository.delete(assignment);
 	      }
 	}
