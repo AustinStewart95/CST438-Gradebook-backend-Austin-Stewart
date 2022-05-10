@@ -66,4 +66,10 @@ public class Assignment {
 				+ ", needsGrading=" + needsGrading + "]";
 	}
 	
+	@Override
+	public boolean equals(Object obj) {
+	   Assignment other = (Assignment)obj;
+	   return other.id==this.id;
+	}
+	
 }
