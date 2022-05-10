@@ -289,6 +289,7 @@ public class JunitTestGradebook {
 	   given(assignmentGradeRepository.findByAssignmentIdAndStudentEmail(1, TEST_STUDENT_EMAIL)).willReturn(null);
 	   given(assignmentGradeRepository.save(any())).willReturn(ag);
 	   given(courseRepository.findById(TEST_COURSE_ID)).willReturn(Optional.of(course));
+	   given(assignmentRepository.save(any())).willReturn(assignment);
 
 	   // end of mock data
 	   
@@ -372,29 +373,31 @@ public class JunitTestGradebook {
       given(assignmentGradeRepository.findByAssignmentIdAndStudentEmail(1, TEST_STUDENT_EMAIL)).willReturn(null);
       given(assignmentGradeRepository.save(any())).willReturn(ag);
       given(courseRepository.findById(TEST_COURSE_ID)).willReturn(Optional.of(course));
+      given(assignmentRepository.save(any())).willReturn(assignment);
 
       // end of mock data
 
-      // then do a find assignment 1 and save it
-      Assignment result = assignmentRepository.findById(1).orElse(null);
-
       // Verify assignment id 
+      Assignment result = assignmentRepository.findById(1).orElse(null);
       assertEquals(1, result.getId());
-
-      // change assignment name
-      result.setName(TEST_ASSIGNMENT_NAME);
-
+      
+      // Create DTO to send new assignment name
+      AssignmentListDTO.AssignmentDTO adto = new AssignmentListDTO.AssignmentDTO();
+      adto.assignmentName = TEST_ASSIGNMENT_NAME;
+     
       // send updates to server
       response = mvc
-            .perform(MockMvcRequestBuilders.put("/course/40442/assignment/1").accept(MediaType.APPLICATION_JSON)
-                  .content(asJsonString(result)).contentType(MediaType.APPLICATION_JSON))
+            .perform(MockMvcRequestBuilders.put("/course/40442/assignment/1")
+            .accept(MediaType.APPLICATION_JSON)
+            .content(asJsonString(adto))
+            .contentType(MediaType.APPLICATION_JSON))
             .andReturn().getResponse();
 
       // verify that return status = OK (value 200)
       assertEquals(200, response.getStatus());
 
       // verify that repository save method was called
-      // AssignmentGrade must override equals method for this test for work !!!
+      // Assignment must override equals method for this test for work !!!
       Assignment updateda = new Assignment();
       updateda.setId(1);
       updateda.setName(TEST_ASSIGNMENT_NAME);
