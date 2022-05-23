@@ -97,7 +97,7 @@ public class GradeBookController {
 		System.out.println("Gradebook - calcFinalGrades for course " + course_id);
 		
 		// check that this request is from the course instructor 
-		String email = "dwisneski@csumb.edu";  // user name (should be instructor's email) 
+		String email = "dwisneski@csumb.edu";  // user name (should be instructor's email)
 		
 		Course c = courseRepository.findById(course_id).orElse(null);
 		if (!c.getInstructor().equals(email)) {
