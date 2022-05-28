@@ -2,6 +2,7 @@ package com.cst438;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -52,6 +53,7 @@ public class EndToEndTestAddAssignment {
 	public static final String TEST_COURSE_TITLE = "Test Course";
 	public static final String TEST_STUDENT_NAME = "Test";
 	public static final String TEST_DUE_DATE = "2020-01-10";
+	public static final int TEST_COURSE_ID = 40443; 
 
 	@Autowired
 	EnrollmentRepository enrollmentRepository;
@@ -66,35 +68,18 @@ public class EndToEndTestAddAssignment {
 	AssignmentRepository assignmentRepository;
 
 	@Test
-	public void addCourseTest() throws Exception {
+	public void addAssignmentTest() throws Exception {
 
-//		Database setup:  create course		
-		Course c = new Course();
-		c.setCourse_id(99999);
-		c.setInstructor(TEST_INSTRUCTOR_EMAIL);
-		c.setSemester("Fall");
-		c.setYear(2021);
-		c.setTitle(TEST_COURSE_TITLE);
-
-//	    add an assignment that needs grading for course 99999
-		Assignment a = new Assignment();
-		a.setCourse(c);
-		// set assignment due date to 24 hours ago
-		a.setDueDate(new java.sql.Date(System.currentTimeMillis() - 24 * 60 * 60 * 1000));
-		a.setName(TEST_ASSIGNMENT_NAME);
-		a.setNeedsGrading(1);
-
-//	    add a student TEST into course 99999
-		Enrollment e = new Enrollment();
-		e.setCourse(c);
-		e.setStudentEmail(TEST_USER_EMAIL);
-		e.setStudentName(TEST_STUDENT_NAME);
-
-		courseRepository.save(c);
-		a = assignmentRepository.save(a);
-		e = enrollmentRepository.save(e);
-
-		AssignmentGrade ag = null;
+	   /*
+       * if assignment already exists, then delete the assignment.
+       */
+      
+      Assignment x = null;
+      do {
+         x = assignmentRepository.findByNameAndCourseId(TEST_ASSIGNMENT_NAME, TEST_COURSE_ID);
+         if (x != null)
+            assignmentRepository.delete(x);
+      } while (x != null);
 
 		// set the driver location and start driver
 		//@formatter:off
@@ -118,81 +103,56 @@ public class EndToEndTestAddAssignment {
 		
 
 		try {
-			/*
-			* locate input element for test assignment by assignment name
-			* 
-			* To select a radio button in a Datagrid display
-			* 1.  find the elements in the assignmentName column of the data grid table.
-			* 2.  locate the element with test assignment name and click the input tag.
-			*/
-			
-			List<WebElement> elements  = driver.findElements(By.xpath("//div[@data-field='assignmentName']/div"));
-			boolean found = false;
-			for (WebElement we : elements) {
-				System.out.println(we.getText()); // for debug
-				if (we.getText().equals(TEST_ASSIGNMENT_NAME)) {
-					found=true;
-					we.findElement(By.xpath("descendant::input")).click();
-					break;
-				}
-			}
-			assertTrue( found, "Unable to locate TEST ASSIGNMENT in list of assignments to be graded.");
-
-			/*
-			 *  Locate and click Grade button to indicate to grade this assignment.
-			 */
-			
-			driver.findElement(By.xpath("//a")).click();
-			Thread.sleep(SLEEP_DURATION);
-
-			/*
-			 *  Locate row for student name "Test" and enter score of "99.9" into the grade field
-			 *  there should only be one row in the data grid table.
-			 *  find the student name, then go to the grade column and enter 99.9
-			 */
-			
-			elements  = driver.findElements(By.xpath("//div[@data-field='name' and @role='cell']"));
-			for (WebElement element : elements) {
-				System.out.println(element.getText());
-				if (element.getText().equals(TEST_STUDENT_NAME)) {
-					element.findElement(By.xpath("following-sibling::div[@data-field='grade']")).sendKeys("99.9"+Keys.ENTER);
-					Thread.sleep(SLEEP_DURATION);
-					break;
-				}
-			}
-			
-			/*
-			 *  Locate submit button and click
-			 */
-			driver.findElement(By.xpath("//button[@id='Submit']")).click();
-			Thread.sleep(SLEEP_DURATION);
-
-			/*
-			 *  verify that score show up in updated data grid table
-			 */
-			
-			 WebElement w = driver.findElement(By.xpath("//div[@data-field='name' and @role='cell']"));
-			 w =  w.findElement(By.xpath("following-sibling::div[@data-field='grade']"));
-			assertEquals("99.9", w.getText(), "score does not show value entered as 99.9");
-
-			// verify that assignment_grade has been added to database with score of 99.9
-			ag = assignnmentGradeRepository.findByAssignmentIdAndStudentEmail(a.getId(), TEST_USER_EMAIL);
-			assertEquals("99.9", ag.getScore());
+		   // Locate and click "Add Assignment" button which is the last button on the page.
+		   System.out.println("before add assignment button click"); // for debug
+		   driver.findElement(By.xpath("//button[@id='addAssignment']")).click();
+         System.out.println("after add assignment button click"); // for debug
+         Thread.sleep(SLEEP_DURATION);
+         
+         // enter assignment information and click Add button
+         
+         driver.findElement(By.xpath("//input[@name='course_id']")).sendKeys(Integer.toString(TEST_COURSE_ID));
+         driver.findElement(By.xpath("//input[@name='assignment_name']")).sendKeys(TEST_ASSIGNMENT_NAME);
+         driver.findElement(By.xpath("//input[@name='due_date']")).sendKeys(TEST_DUE_DATE);
+         driver.findElement(By.xpath("//button[@id='Add']")).click();
+         Thread.sleep(SLEEP_DURATION);
+         
+         /*
+          * verify that the new assignment shows in the assignment list.
+          */ 
+         
+         List<WebElement> elements  = driver.findElements(By.xpath("//div[@data-field='assignmentName']/div"));
+         boolean found = false;
+         for (WebElement we : elements) {
+            System.out.println(we.getText()); // for debug
+            if (we.getText().equals(TEST_ASSIGNMENT_NAME)) {
+               found=true;
+               break;
+            }
+         }
+         assertTrue( found, "Unable to locate TEST ASSIGNMENT in list of assignments to be graded.");
+         
+         // verify that the assignment row has been inserted to database.
+         
+         Assignment a = assignmentRepository.findByNameAndCourseId(TEST_ASSIGNMENT_NAME, TEST_COURSE_ID);
+         assertNotNull(a, "Course assignment not found in database.");
 
 		} catch (Exception ex) {
 			throw ex;
 		} finally {
 
-			/*
-			 *  clean up database so the test is repeatable.
-			 */
-			ag = assignnmentGradeRepository.findByAssignmentIdAndStudentEmail(a.getId(), TEST_USER_EMAIL);
-			if (ag!=null) assignnmentGradeRepository.delete(ag);
-			enrollmentRepository.delete(e);
-			assignmentRepository.delete(a);
-			courseRepository.delete(c);
+		   // clean up database.
+         
+         Assignment a = assignmentRepository.findByNameAndCourseId(TEST_ASSIGNMENT_NAME, TEST_COURSE_ID);
+         if (a != null) {
+            assignmentRepository.delete(a);
+            System.out.println("assignment found and deleted"); // for debug
+         }
+         else {
+            System.out.println("assignment could not be found"); // for debug
+         }
 
-			driver.quit();
+         driver.quit();
 		}
 
 	}
