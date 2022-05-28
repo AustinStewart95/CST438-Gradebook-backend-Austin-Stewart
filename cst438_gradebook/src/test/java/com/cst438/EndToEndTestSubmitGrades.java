@@ -51,6 +51,7 @@ public class EndToEndTestSubmitGrades {
 	public static final String TEST_ASSIGNMENT_NAME = "Test Assignment";
 	public static final String TEST_COURSE_TITLE = "Test Course";
 	public static final String TEST_STUDENT_NAME = "Test";
+	public static final String TEST_DUE_DATE = "2020-01-10";
 
 	@Autowired
 	EnrollmentRepository enrollmentRepository;
