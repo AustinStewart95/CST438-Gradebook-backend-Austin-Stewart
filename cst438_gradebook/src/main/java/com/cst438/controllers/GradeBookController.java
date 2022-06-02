@@ -98,13 +98,13 @@ public class GradeBookController {
 	public void calcFinalGrades(@PathVariable int course_id, @AuthenticationPrincipal OAuth2User principal) {
 		System.out.println("Gradebook - calcFinalGrades for course " + course_id);
 		
-		String student_email = principal.getAttribute("email");
+		String instructor_email = principal.getAttribute("email");
 		
 		Course c = courseRepository.findById(course_id).orElse(null);
-		if (!c.getInstructor().equals(student_email)) {
+		if (!c.getInstructor().equals(instructor_email)) {
 			throw new ResponseStatusException( HttpStatus.UNAUTHORIZED, "Not Authorized. " );
 		}
-		
+
 		CourseDTOG cdto = new CourseDTOG();
 		cdto.course_id = course_id;
 		cdto.grades = new ArrayList<>();
@@ -139,8 +139,8 @@ public class GradeBookController {
 	@Transactional
 	public void updateGradebook (@RequestBody GradebookDTO gradebook, @PathVariable("id") Integer assignmentId, @AuthenticationPrincipal OAuth2User principal) {
 		
-	   String student_email = principal.getAttribute("email"); 
-		checkAssignment(assignmentId, student_email);  // check that user name matches instructor email of the course.
+	   String instructor_email = principal.getAttribute("email"); 
+		checkAssignment(assignmentId, instructor_email);  // check that user name matches instructor email of the course.
 		
 		// for each grade in gradebook, update the assignment grade in database 
 		System.out.printf("%d %s %d\n",  gradebook.assignmentId, gradebook.assignmentName, gradebook.grades.size());
@@ -178,11 +178,11 @@ public class GradeBookController {
 	public AssignmentListDTO.AssignmentDTO addAssignment(@RequestBody AssignmentListDTO.AssignmentDTO adto, @PathVariable Integer course_id, @AuthenticationPrincipal OAuth2User principal) {
 	   System.out.println("Assignment - create new assignment for course " + course_id);
 
-	   String student_email = principal.getAttribute("email");
+	   String instructor_email = principal.getAttribute("email");
 	   
 	   Course course  = courseRepository.findById(course_id).orElse(null);
 	   
-	   if(course!=null && student_email=="dwisneski@csumb.edu"){
+	   if(course!=null && course.getInstructor().equals(instructor_email)){
 	      Assignment assignment = new Assignment();
 	      assignment.setName(adto.assignmentName);
 	      assignment.setDueDate(Date.valueOf(adto.dueDate));
@@ -204,14 +204,14 @@ public class GradeBookController {
 	public void updateAssignmentName(@RequestBody AssignmentListDTO.AssignmentDTO adto, @PathVariable Integer course_id, @PathVariable Integer assignment_id, @AuthenticationPrincipal OAuth2User principal) {
 	      System.out.println("Assignment - update assignment for Course " + course_id + " Assignment " + assignment_id);
 
-	      String student_email = principal.getAttribute("email");
+	      String instructor_email = principal.getAttribute("email");
 	      
 	      Course c = courseRepository.findById(course_id).orElse(null);
-	      if (!c.getInstructor().equals(student_email)) {
+	      if (!c.getInstructor().equals(instructor_email)) {
 	         throw new ResponseStatusException( HttpStatus.UNAUTHORIZED, "Not Authorized. " );
 	      }
 	      
-	      Assignment assignment = checkAssignment(assignment_id, student_email);  // check that user name matches instructor email of the course.
+	      Assignment assignment = checkAssignment(assignment_id, instructor_email);  // check that user name matches instructor email of the course.
 	      assignment.setName(adto.assignmentName);
 	      assignmentRepository.save(assignment);
 	}
@@ -221,14 +221,14 @@ public class GradeBookController {
 	public void deleteAssignment(@PathVariable Integer course_id, @PathVariable Integer assignment_id, @AuthenticationPrincipal OAuth2User principal) {
 	     System.out.println("Assignment - delete assignment for course " + course_id);
 
-	     String student_email = principal.getAttribute("email");
+	     String instructor_email = principal.getAttribute("email");
 	      
 	      Course course  = courseRepository.findById(course_id).orElse(null);
-	      if (!course.getInstructor().equals(student_email)) {
+	      if (!course.getInstructor().equals(instructor_email)) {
 	         throw new ResponseStatusException( HttpStatus.UNAUTHORIZED, "Not Authorized. " );
 	      }
 	      
-	      Assignment assignment = checkAssignment(assignment_id, student_email);
+	      Assignment assignment = checkAssignment(assignment_id, instructor_email);
 	      
 	      if(course!=null && assignment.getNeedsGrading() == 1) {
 	         assignmentRepository.delete(assignment);
